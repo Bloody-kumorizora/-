@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Тайга на связи</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Golos+Text:wght@400;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Концепция: стол в лаборатории. Большой монитор с тепловой камерой, рядом приборы, снизу разговор. */
+:root{
+  --ink:#0d0e13; --desk:#16171f; --line:#2c2e3a; --heat:#f4f2ea; --dim:#a6a7b4;
+  --dusk:#ff8a3d; --radar:#6fd6c8; --alert:#ff5d5d;
+  --display:'Unbounded','Arial Black',system-ui,sans-serif;
+  --body:'Golos Text','Segoe UI',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Consolas',monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--heat);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--dusk);outline-offset:2px}
+#app{min-height:100%;max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:12px;
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.02em}
+.steps{display:flex;gap:6px;margin:0;padding:0;list-style:none;flex:1;min-width:0;flex-wrap:wrap}
+.steps li{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:4px;color:var(--dim);background:var(--desk)}
+.steps li.on{background:var(--dusk);color:#191006;font-weight:700}
+.steps li.ok{color:var(--radar)}
+.mute{background:none;border:1px solid var(--line);border-radius:4px;padding:3px 9px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.desk{display:grid;grid-template-columns:minmax(0,calc((100vh - 184px)*11/8)) 300px;justify-content:center;gap:12px;align-items:start}
+.monitor{position:relative;background:#000;border:6px solid #23242e;border-radius:10px;overflow:hidden;
+  aspect-ratio:11/8;width:100%;min-width:0}
+canvas{display:block;width:100%;height:100%;touch-action:manipulation}
+.hud{position:absolute;left:10px;top:8px;font-family:var(--mono);font-size:12px;color:var(--heat);opacity:.8;pointer-events:none;text-shadow:0 1px 2px #000}
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:4%;background:rgba(8,9,13,.72);overflow:auto}
+.card{max-width:560px;width:100%;background:var(--desk);border:1px solid var(--line);border-radius:10px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-family:var(--display);font-weight:500;font-size:20px;line-height:1.25;margin:0;text-wrap:balance}
+.card p{margin:0}
+.kicker{font-family:var(--mono);font-size:12px;color:var(--radar);letter-spacing:.06em;text-transform:uppercase}
+#hero{background:linear-gradient(180deg,rgba(8,9,13,.25),rgba(8,9,13,.8));align-items:flex-end;justify-content:flex-start}
+.hero{display:flex;flex-direction:column;gap:12px;max-width:640px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,6.2vw,66px);line-height:1.02;margin:0;letter-spacing:-.01em}
+.hero p{margin:0;max-width:52ch}
+.levels{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--dusk);color:#191006;border:0;border-radius:6px;padding:10px 16px;font-weight:600}
+.btn:hover{background:#ffa266}
+.btn.alt{background:none;color:var(--heat);border:1px solid var(--line)}
+.btn.alt:hover{border-color:var(--dim)}
+.credit{font-size:12px;color:var(--dim)}
+#side{display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel{background:var(--desk);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.panel h3{margin:0;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--dim);letter-spacing:.05em;text-transform:uppercase}
+.panel p,.panel ol{margin:0;font-size:14px}
+.panel ol{padding-left:18px}
+.meter{height:10px;background:#000;border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--heat);transition:width .15s}
+.meter.low i{background:var(--alert)}
+.row{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.tool{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#20212c;border:1px solid transparent;border-radius:6px;padding:7px 9px;font-size:14px;line-height:1.25}
+.tool:hover:not(:disabled){border-color:var(--dim)}
+.tool.on{border-color:var(--dusk);background:#2b2118}
+.tool:disabled{opacity:.42;cursor:default}
+.tool small{display:block;color:var(--dim);font-size:12px}
+.tool svg{flex:none;width:34px;height:34px;border-radius:6px}
+.kbd{font-family:var(--mono);font-size:12px;color:var(--dim)}
+#talk{display:flex;gap:12px;align-items:flex-start;background:var(--desk);border-radius:8px;padding:10px 12px;min-height:84px}
+#talk svg{flex:none;width:58px;height:58px;border-radius:8px}
+.words{flex:1;min-width:0}
+.who{font-family:var(--mono);font-size:12px;color:var(--dusk)}
+.line{margin:2px 0 0}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.next{flex:none;align-self:center}
+@media (max-width:860px){
+  .desk{grid-template-columns:minmax(0,1fr)}
+  
+  .hero p{font-size:14px}
+  #talk svg{width:44px;height:44px}
+  #talk{order:-1}
+}
+@media (max-width:520px){#hero{padding:12px}.hero{gap:8px}.credit{display:none}}
+</style>
+
+<div id="app">
+  <div class="top">
+    <div class="brand">ТАЙГА НА СВЯЗИ</div>
+    <ol class="steps" id="steps">
+      <li data-s="1">1 Цепочка JuniX</li><li data-s="2">2 След в след</li><li data-s="3">3 Тишина в эфире</li>
+    </ol>
+    <button class="mute" id="mute" type="button">Звук: вкл</button>
+  </div>
+  <div class="desk">
+    <div class="monitor">
+      <canvas id="view" width="1100" height="800" aria-label="Экран лаборатории: карта тайги и спутники"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="overlay" id="hero">
+        <div class="hero">
+          <div class="kicker">Август 2050. Студенческая лаборатория, Москва</div>
+          <h1>Тайга на&nbsp;связи</h1>
+          <p>Студенты убежали на пять минут и оставили вас у экранов. В тысячах километров отсюда Ровер-1 пропал из виду, а за деревьями стоит человек.</p>
+          <div class="levels">
+            <button class="btn" data-level="0" type="button">Играть: Стажёр</button>
+            <button class="btn alt" data-level="1" type="button">Играть: Инженер</button>
+          </div>
+          <div class="credit">Игра по рассказу А. И. Афанасьевой «Облако атакует!» из цикла «Космикс: хроника поколения» (© ООО «СПУТНИКС»). Сделана для конкурса SK Kids Challenge 2026.</div>
+        </div>
+      </div>
+      <div class="overlay" id="card" hidden></div>
+    </div>
+    <div id="side"><div class="panel"><h3>Что вас ждёт</h3><p>Три задания: собрать спутниковую связь, провести ровер мимо скрытых провалов и спасти человека, не подав ему опасный сигнал.</p></div><div class="panel"><h3>Уровни</h3><p>Стажёр: снимки радара крупнее, полостей меньше. Инженер: полостей больше, снимки меньше.</p></div><div class="panel"><h3>Команда</h3><p>Ваня советуется с Авророй. Гриша понимает насекомых и видит, куда пойдёт рой.</p></div></div>
+  </div>
+  <div id="talk" aria-live="polite"></div>
+</div>
+
+<script>
+/*CORE-START*/
+const Core=(()=>{
+  function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+  const W=11,H=8,LEVELS=[{pits:12,scanR:2,pass:5,bonus:12},{pits:17,scanR:1,pass:6,bonus:8}];
+  const key=(x,y)=>x+','+y, inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H;
+  const around=(x,y)=>{const o=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if((dx||dy)&&inb(x+dx,y+dy))o.push([x+dx,y+dy]);return o};
+  function bfs(pit,a,b){
+    const seen=new Map([[key(a.x,a.y),0]]),q=[[a.x,a.y]];
+    while(q.length){const [x,y]=q.shift(),d=seen.get(key(x,y));if(x===b.x&&y===b.y)return d;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(inb(nx,ny)&&!pit.has(k)&&!seen.has(k)){seen.set(k,d+1);q.push([nx,ny])}}}
+    return -1}
+  function landing(m,x,y){
+    if(x<1||y<1||x>W-2||y>H-2)return'edge';
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)if(m.pit.has(key(x+dx,y+dy)))return'pit';
+    const dh=Math.max(Math.abs(x-m.human.x),Math.abs(y-m.human.y));
+    if(dh>4)return'far';if(dh<2)return'near';
+    if(Math.max(Math.abs(x-m.hole.x),Math.abs(y-m.hole.y))<3)return'swarm';
+    return'ok'}
+  function genMap(seed,level){
+    const L=LEVELS[level];
+    for(let a=0;a<4000;a++){
+      const r=rng(seed+a*7919),ri=(lo,hi)=>lo+Math.floor(r()*(hi-lo+1));
+      const start={x:0,y:ri(2,H-3)},target={x:W-2,y:ri(1,H-2)},hole={x:W-1,y:target.y};
+      const human={x:ri(5,7),y:r()<.5?ri(0,1):ri(H-2,H-1)};
+      if(Math.abs(human.y-target.y)<3)continue;
+      const pit=new Set([key(hole.x,hole.y)]),ban=new Set([key(target.x,target.y),key(human.x,human.y)]);
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ban.add(key(start.x+dx,start.y+dy));ban.add(key(human.x+dx,human.y+dy))}
+      let n=0;while(n<L.pits){const x=ri(1,W-1),y=ri(0,H-1),k=key(x,y);if(!ban.has(k)&&!pit.has(k)){pit.add(k);n++}}
+      const shortest=bfs(pit,start,target);if(shortest<0||shortest>W+2)continue;
+      const m={w:W,h:H,seed:seed+a*7919,level,start,target,hole,human,pit,shortest};
+      let spots=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(landing(m,x,y)==='ok')spots++;
+      if(spots<2)continue;
+      m.swarm=swarmPath(m);return m}
+    throw new Error('map')}
+  function swarmPath(m){
+    const r=rng(m.seed^0x51f15e),p=[];let x=6,y=m.target.y;
+    for(let i=0;i<240;i++){p.push({x,y});
+      if(i%2)continue;const c=[[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy])=>x+dx>=3&&x+dx<=W-2&&y+dy>=1&&y+dy<=H-2);
+      const [dx,dy]=c[Math.floor(r()*c.length)];x+=dx;y+=dy}
+    return p}
+  function newRun(m){
+    const L=LEVELS[m.level];
+    return{m,x:m.start.x,y:m.start.y,turn:0,maxCharge:m.shortest*2+L.bonus,charge:m.shortest*2+L.bonus,reads:new Map([[key(m.start.x,m.start.y),count(m,m.start.x,m.start.y)]]),
+      scanned:new Set(),knownPit:new Set([key(m.hole.x,m.hole.y)]),safe:new Set([key(m.start.x,m.start.y)]),flags:new Set(),nextPass:0,
+      askLeft:2,forecastLeft:2,forecastUntil:-1,falls:0,scans:0,hits:0,status:'play'}}
+  const count=(m,x,y)=>around(x,y).filter(([a,b])=>m.pit.has(key(a,b))).length;
+  function learnZero(s,x,y){if(s.reads.get(key(x,y))===0)for(const [a,b] of around(x,y))s.safe.add(key(a,b))}
+  function swarmAt(s,t=s.turn){const p=s.m.swarm;return p[Math.min(t,p.length-1)]}
+  const inSwarm=(s,x,y,t)=>{const c=swarmAt(s,t);return Math.abs(c.x-x)+Math.abs(c.y-y)<=1};
+  function step(s,dx,dy){
+    if(s.status!=='play')return{ok:false};
+    const x=s.x+dx,y=s.y+dy;if(!inb(x,y))return{ok:false,why:'edge'};
+    const k=key(x,y);s.x=x;s.y=y;s.turn++;s.charge--;
+    if(s.m.pit.has(k)){s.knownPit.add(k);s.falls++;s.status='fell';return{ok:true,ev:'fell'}}
+    s.safe.add(k);s.flags.delete(k);
+    let ev='moved';
+    if(inSwarm(s,x,y)){s.charge=Math.max(0,s.charge-2);s.hits++;ev='swarm'}
+    else{s.reads.set(k,count(s.m,x,y));learnZero(s,x,y)}
+    if(x===s.m.target.x&&y===s.m.target.y){s.status='won';return{ok:true,ev:'won'}}
+    if(s.charge<=0){s.status='empty';return{ok:true,ev:'empty'}}
+    return{ok:true,ev}}
+  function scan(s,x,y){
+    if(s.turn<s.nextPass)return false;const R=LEVELS[s.m.level].scanR;
+    for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const a=x+dx,b=y+dy;if(!inb(a,b))continue;const k=key(a,b);s.scanned.add(k);
+      if(s.m.pit.has(k))s.knownPit.add(k);else s.safe.add(k)}
+    s.nextPass=s.turn+LEVELS[s.m.level].pass;s.scans++;return true}
+  function ask(s,x,y){if(s.askLeft<=0)return null;s.askLeft--;const k=key(x,y),bad=s.m.pit.has(k);if(bad)s.knownPit.add(k);else s.safe.add(k);return bad}
+  function restart(s){s.x=s.m.start.x;s.y=s.m.start.y;s.turn=0;s.charge=s.maxCharge;s.nextPass=0;s.forecastUntil=-1;s.status='play'}
+  const ROWS=[{y:470,n:8,sp:165,v:5,off:[2,6]},{y:300,n:7,sp:200,v:-3.5,off:[]}],RANGE=295,HOLD=RANGE*1.3,A={x:120,y:700},B={x:980,y:700};
+  function sats(t){const o=[];ROWS.forEach((r,ri)=>{const wrap=r.n*r.sp;for(let i=0;i<r.n;i++){let x=(i*r.sp+r.v*t)%wrap;if(x<0)x+=wrap;o.push({id:ri+':'+i,x:x-110,y:r.y,off:r.off.includes(i)})}});return o}
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  function route(t){
+    const nodes=sats(t).filter(n=>!n.off),prev=new Map(),q=[];
+    for(const n of nodes)if(dist(A,n)<=RANGE){prev.set(n.id,null);q.push(n)}
+    while(q.length){const n=q.shift();if(dist(n,B)<=RANGE){const p=[];for(let c=n.id;c;c=prev.get(c))p.unshift(c);return p}
+      for(const m of nodes)if(!prev.has(m.id)&&dist(n,m)<=RANGE){prev.set(m.id,n.id);q.push(m)}}
+    return null}
+  return{rng,W,H,LEVELS,key,around,genMap,newRun,step,scan,ask,restart,swarmAt,inSwarm,landing,count,bfs,sats,route,dist,RANGE,HOLD,A,B}
+})();
+/*CORE-END*/
+
+const $=s=>document.querySelector(s),cv=$('#view'),g=cv.getContext('2d'),VW=1100,VH=800,CS=100;
+const calm=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const dpr=Math.min(devicePixelRatio||1,2);cv.width=VW*dpr;cv.height=VH*dpr;g.setTransform(dpr,0,0,dpr,0,0);
+
+/* Звук */
+let ac=null,muted=false;
+function beep(f,d=.08,type='square',vol=.04){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),v=ac.createGain();o.type=type;o.frequency.value=f;v.gain.value=vol;v.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(v).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+$('#mute').onclick=()=>{muted=!muted;$('#mute').textContent='Звук: '+(muted?'выкл':'вкл')};
+
+/* Портреты */
+const face=(bg,skin,hair,extra='')=>`<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="${bg}"/><path d="M10 64c2-16 12-20 22-20s20 4 22 20z" fill="#3a3c4c"/><circle cx="32" cy="29" r="15" fill="${skin}"/>${hair}<circle cx="26" cy="30" r="1.8" fill="#14151c"/><circle cx="38" cy="30" r="1.8" fill="#14151c"/>${extra}</svg>`;
+const OWL=`<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#f4f2ea"/><path d="M14 12 26 22H14z" fill="#f2545b"/><path d="M50 12 38 22h12z" fill="#2f7de1"/><path d="M14 22h36v26L32 58 14 48z" fill="#3a3c4c"/><circle cx="24" cy="30" r="8" fill="#ffc53d"/><circle cx="40" cy="30" r="8" fill="#6fd6c8"/><circle cx="24" cy="30" r="3" fill="#14151c"/><circle cx="40" cy="30" r="3" fill="#14151c"/><path d="M32 33l4 6h-8z" fill="#ff8a3d"/><path d="M22 44h6l-3 6zM36 44h6l-3 6z" fill="#a877ef"/></svg>`;
+const P={
+  vanya:{n:'Ваня',a:face('#2b3a55','#e9bd9c','<path d="M17 28c0-12 8-16 15-16s15 4 15 16c-6-5-24-5-30 0z" fill="#3b2a20"/>')},
+  grisha:{n:'Гриша',a:face('#37502f','#f0c8a8','<path d="M17 26c1-11 9-14 15-14s14 3 15 14l-5-3-5 3-5-3-5 3-5-3z" fill="#b8652f"/>','<circle cx="26" cy="30" r="5" fill="none" stroke="#14151c" stroke-width="1.4"/><circle cx="38" cy="30" r="5" fill="none" stroke="#14151c" stroke-width="1.4"/>')},
+  diana:{n:'Диана',a:face('#51384f','#f3cfb4','<path d="M15 34c-2-16 8-22 17-22s19 6 17 22c-2-9-8-12-17-12s-15 3-17 12z" fill="#ecd27e"/>')},
+  sasha:{n:'Саша',a:face('#54402b','#8a5a3c','<g fill="#1d1612"><circle cx="20" cy="20" r="7"/><circle cx="30" cy="14" r="8"/><circle cx="42" cy="17" r="7"/><circle cx="48" cy="27" r="5"/><circle cx="16" cy="28" r="5"/></g>')},
+  anton:{n:'Антон',a:face('#2f4a4a','#ecc3a2','<g fill="#57402f"><circle cx="22" cy="17" r="6"/><circle cx="32" cy="14" r="6"/><circle cx="42" cy="17" r="6"/></g>')},
+  natalya:{n:'Наталья Николаевна',a:face('#4a3350','#e7c0a4','<path d="M16 30c-1-14 8-18 16-18s17 4 16 18c-4-7-10-9-16-9s-12 2-16 9z" fill="#4a2c22"/>')},
+  aurora:{n:'Аврора',a:OWL},
+  text:{n:'',a:''}
+};
+
+/* Разговоры */
+const talk=$('#talk');
+function show(who,text,extra=''){const p=P[who]||P.text;talk.innerHTML=`${p.a}<div class="words">${p.n?`<div class="who">${p.n}</div>`:''}<p class="line">${text}</p>${extra}</div>`}
+let advance=null;
+function say(lines){return new Promise(done=>{let i=0;const next=()=>{if(i>=lines.length){advance=null;done();return}const [w,t]=lines[i++];show(w,t);
+  const b=document.createElement('button');b.className='btn next';b.type='button';b.textContent=i>=lines.length?'Продолжить':'Дальше';b.onclick=()=>{beep(520,.04);next()};talk.append(b);advance=next};next()})}
+function choose(q,who,opts){return new Promise(done=>{show(who,q,`<div class="opts">${opts.map((o,i)=>`<button class="btn alt" type="button" data-o="${i}">${o}</button>`).join('')}</div>`);
+  talk.querySelectorAll('[data-o]').forEach(b=>b.onclick=()=>done(+b.dataset.o))})}
+function card(kicker,title,text,btn='Дальше'){return new Promise(done=>{const c=$('#card');c.hidden=false;c.innerHTML=`<div class="card"><div class="kicker">${kicker}</div><h2>${title}</h2><p>${text}</p><div><button class="btn" id="cardGo" type="button">${btn}</button></div></div>`;
+  $('#cardGo').onclick=()=>{c.hidden=true;done()};$('#cardGo').focus()})}
+function stage(n){document.querySelectorAll('#steps li').forEach(li=>{const s=+li.dataset.s;li.className=s===n?'on':s<n?'ok':''})}
+const side=h=>{$('#side').innerHTML=h};
+const hud=t=>{$('#hud').textContent=t};
+
+/* Рисование: общая часть */
+let scene=null,T=0,last=0,shake=0;
+const noise=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d'),d=x.createImageData(256,256);for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=26}x.putImageData(d,0,0);return c})();
+function grain(){g.save();const ox=calm?0:Math.random()*256|0,oy=calm?0:Math.random()*256|0;g.translate(-ox,-oy);for(let y=0;y<VH+256;y+=256)for(let x=0;x<VW+256;x+=256)g.drawImage(noise,x,y);g.restore();
+  const v=g.createRadialGradient(VW/2,VH/2,VH*.45,VW/2,VH/2,VW*.72);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.5)');g.fillStyle=v;g.fillRect(0,0,VW,VH)}
+function groundFor(seed){const c=document.createElement('canvas');c.width=VW;c.height=VH;const x=c.getContext('2d'),r=Core.rng(seed*31+7);x.fillStyle='#34353a';x.fillRect(0,0,VW,VH);
+  for(let i=0;i<2600;i++){x.fillStyle=`rgba(${r()<.5?'255,255,255':'0,0,0'},${r()*.05})`;const s=r()*40+6;x.beginPath();x.ellipse(r()*VW,r()*VH,s,s*.5,r()*3,0,7);x.fill()}
+  x.lineCap='round';for(let i=0;i<120;i++){const px=r()*VW,py=r()*VH,h=40+r()*80;x.strokeStyle=`rgba(6,6,8,${.45+r()*.4})`;x.lineWidth=1.5+r()*3.5;x.beginPath();x.moveTo(px,py);x.lineTo(px+(r()-.5)*14,py-h);x.stroke()}
+  return c}
+const parts=Array.from({length:calm?140:420},()=>{const a=Math.random()*6.28,d=Math.pow(Math.random(),.6);return{a,d,s:.4+Math.random()*1.6,p:Math.random()*6.28,z:1+Math.random()*1.8}});
+const swarm={x:600,y:400,blow:0};
+function drawSwarm(tx,ty,R=105){swarm.x+=(tx-swarm.x)*.05;swarm.y+=(ty-swarm.y)*.05;const b=swarm.blow,gl=g.createRadialGradient(swarm.x,swarm.y,0,swarm.x,swarm.y,R*1.3);gl.addColorStop(0,`rgba(244,242,234,${.42*(1-b)})`);gl.addColorStop(1,'rgba(244,242,234,0)');g.fillStyle=gl;g.fillRect(swarm.x-R*1.4,swarm.y-R*1.4,R*2.8,R*2.8);
+  g.fillStyle=`rgba(255,255,250,${.9*(1-b)})`;const t=calm?0:T;for(const q of parts){const w=Math.sin(t*q.s+q.p),rr=R*q.d*(1+.22*w)*(1+b*7);const a=q.a+t*.22*q.s;g.fillRect(swarm.x+Math.cos(a)*rr,swarm.y+Math.sin(a)*rr*.72,q.z,q.z)}}
+function drawRover(x,y,dim){g.save();g.translate(x,y);g.shadowColor='#fff';g.shadowBlur=dim?0:22;g.fillStyle=dim?'#8c8d94':'#fff';g.fillRect(-20,-13,40,24);g.fillRect(-8,-24,16,12);g.fillStyle='#111';g.fillRect(-25,-15,7,28);g.fillRect(18,-15,7,28);g.restore()}
+function drawHuman(x,y){const s=calm?0:Math.sin(T*1.7)*1.6;g.save();g.translate(x+s,y);g.shadowColor='#fff';g.shadowBlur=18;g.fillStyle='#fff';g.beginPath();g.arc(0,-30,7,0,7);g.fill();g.fillRect(-7,-22,14,26);g.fillRect(-6,4,5,18);g.fillRect(1,4,5,18);g.restore()}
+function drawPit(cx,cy,col){const r=34+(cx*7+cy*3)%8;const p=g.createRadialGradient(cx,cy,2,cx,cy,r);p.addColorStop(0,'#000');p.addColorStop(.8,'#050507');p.addColorStop(1,'#16161c');g.fillStyle=p;g.beginPath();g.arc(cx,cy,r,0,7);g.fill();g.strokeStyle=col;g.lineWidth=3;g.stroke()}
+const ctr=v=>v*CS+CS/2;
+
+/* Заставка */
+function titleScene(){const bg=groundFor(5);swarm.blow=0;return{draw(){g.drawImage(bg,0,0);drawPit(860,250,'#55565f');drawSwarm(830+Math.sin(T*.4)*30,210+Math.cos(T*.3)*16,150);drawHuman(300,190)}}}
+
+/* Миссия 1 */
+function runM1(){return new Promise(done=>{
+  const st={t:0,chain:[],hold:0,breaks:0,hint:null,hover:null,used:0};
+  const pos=id=>Core.sats(st.t).find(n=>n.id===id);
+  const lastNode=()=>st.chain.length?pos(st.chain[st.chain.length-1]):Core.A;
+  const complete=()=>st.chain.length>0&&Core.dist(lastNode(),Core.B)<=Core.HOLD;
+  side(`<div class="panel"><h3>Задача</h3><ol><li>Нажми спутник рядом с Ровером-2. Пунктирный круг показывает дальность связи.</li><li>Нажимай следующие спутники, пока цепочка не дойдёт до Москвы.</li><li>Удержи связь 3 секунды, пока идёт команда.</li></ol></div>
+  <div class="panel"><h3>Передача команды</h3><div class="meter"><i id="holdBar" style="width:0"></i></div><div class="row"><span>Обрывов</span><span id="brk">0</span></div></div>
+  <div class="panel"><button class="tool" id="hintBtn" type="button">${OWL}<span>Показать маршрут<small>Ваня спрашивает Аврору</small></span></button><p class="kbd">Серые кубы с крестиком не работают: обойди их через верхнюю орбиту.</p></div>`);
+  $('#hintBtn').onclick=()=>{st.hint=Core.route(st.t);st.used++;beep(740,.08,'sine');show('aurora',st.hint?'Подсветила маршрут оранжевым. Спутники движутся, так что нажимай быстро.':'Сейчас маршрута нет. Подожди несколько секунд, спутники сместятся.')};
+  scene={st,
+    update(dt){st.t+=dt;
+      for(let i=0;i<st.chain.length;i++){const a=i?pos(st.chain[i-1]):Core.A,b=pos(st.chain[i]);if(Core.dist(a,b)>Core.HOLD||b.x<-60||b.x>VW+60){st.chain.length=i;st.breaks++;st.hold=0;$('#brk').textContent=st.breaks;beep(160,.15);show('vanya','Цепочка порвалась! Спутники улетели слишком далеко, собираем заново.');break}}
+      if(complete()){st.hold+=dt/3;if(st.hold>=1){scene=null;beep(880,.2,'sine');stage(2);done({breaks:st.breaks,hints:st.used});return}}else st.hold=Math.max(0,st.hold-dt);
+      $('#holdBar').style.width=Math.min(100,st.hold*100)+'%'},
+    draw(){g.fillStyle='#07080d';g.fillRect(0,0,VW,VH);const r=Core.rng(3);g.fillStyle='#fff';for(let i=0;i<120;i++){g.globalAlpha=r()*.6;g.fillRect(r()*VW,r()*560,1.6,1.6)}g.globalAlpha=1;
+      const e=g.createRadialGradient(550,2300,1500,550,2300,1680);e.addColorStop(0,'#26324a');e.addColorStop(.92,'#1a2233');e.addColorStop(1,'rgba(111,214,200,.0)');g.fillStyle=e;g.beginPath();g.arc(550,2300,1660,0,7);g.fill();
+      for(const y of [470,300]){g.strokeStyle='rgba(255,255,255,.07)';g.setLineDash([4,10]);g.beginPath();g.moveTo(0,y);g.lineTo(VW,y);g.stroke()}g.setLineDash([]);
+      g.font='600 20px "JetBrains Mono",monospace';g.fillStyle='#f4f2ea';g.textAlign='center';g.fillText('Тайга · Ровер-2',Core.A.x+20,Core.A.y+52);g.fillText('Москва · лаборатория',Core.B.x-40,Core.B.y+52);
+      g.fillStyle='#fff';g.fillRect(Core.A.x-12,Core.A.y-8,24,16);g.fillStyle='#ff8a3d';g.fillRect(Core.B.x-12,Core.B.y-12,24,24);
+      const L=lastNode();g.strokeStyle='rgba(111,214,200,.5)';g.setLineDash([8,8]);g.lineWidth=2;g.beginPath();g.arc(L.x,L.y,Core.RANGE,0,7);g.stroke();g.setLineDash([]);
+      const nodes=Core.sats(st.t);
+      if(st.hint){g.strokeStyle='rgba(255,138,61,.55)';g.lineWidth=8;g.beginPath();g.moveTo(Core.A.x,Core.A.y);for(const id of st.hint){const n=pos(id);g.lineTo(n.x,n.y)}g.lineTo(Core.B.x,Core.B.y);g.stroke()}
+      g.strokeStyle='#6fd6c8';g.lineWidth=4;g.shadowColor='#6fd6c8';g.shadowBlur=complete()?20:6;g.beginPath();g.moveTo(Core.A.x,Core.A.y);for(const id of st.chain){const n=pos(id);g.lineTo(n.x,n.y)}if(complete())g.lineTo(Core.B.x,Core.B.y);g.stroke();g.shadowBlur=0;
+      for(const n of nodes){const on=st.chain.includes(n.id),reach=!n.off&&!on&&Core.dist(L,n)<=Core.RANGE;g.save();g.translate(n.x,n.y);
+        g.fillStyle=n.off?'#2a2b33':on?'#6fd6c8':reach?'#f4f2ea':'#8a8c99';g.fillRect(-13,-13,26,26);g.fillStyle=n.off?'#2a2b33':'#3f6d8c';g.fillRect(-30,-6,14,12);g.fillRect(16,-6,14,12);
+        if(n.off){g.strokeStyle='#ff5d5d';g.lineWidth=3;g.beginPath();g.moveTo(-8,-8);g.lineTo(8,8);g.moveTo(8,-8);g.lineTo(-8,8);g.stroke()}
+        if(st.hover===n.id&&reach){g.strokeStyle='#ff8a3d';g.lineWidth=3;g.strokeRect(-19,-19,38,38)}g.restore()}},
+    pick(x,y){let b=null,bd=38;for(const n of Core.sats(st.t)){const d=Core.dist(n,{x,y});if(d<bd){b=n;bd=d}}return b},
+    move(x,y){const n=this.pick(x,y);st.hover=n&&n.id;cv.style.cursor=n&&!n.off?'pointer':'default'},
+    click(x,y){const n=this.pick(x,y);if(!n)return;
+      if(n.off){beep(200,.08);show('aurora','Этот спутник не отвечает. Обойди его через соседнюю орбиту.');return}
+      if(st.chain[st.chain.length-1]===n.id){st.chain.pop();return}
+      if(st.chain.includes(n.id))return;
+      if(Core.dist(lastNode(),n)>Core.RANGE){beep(200,.08);show('aurora','Слишком далеко. Выбери спутник внутри пунктирного круга.');return}
+      st.chain.push(n.id);st.hint=null;beep(620,.05)}
+  }})}
+
+/* Миссия 2 */
+function drawMap(s,o={}){const m=s.m;g.drawImage(o.bg,0,0);
+  for(let y=0;y<m.h;y++)for(let x=0;x<m.w;x++){const k=Core.key(x,y),px=x*CS,py=y*CS;
+    if(!o.all&&!s.reads.has(k)&&!s.scanned.has(k)){g.fillStyle='rgba(0,0,0,.34)';g.fillRect(px,py,CS,CS)}
+    if(s.scanned.has(k)&&!o.all){g.fillStyle='rgba(111,214,200,.12)';g.fillRect(px,py,CS,CS)}
+    g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;g.strokeRect(px,py,CS,CS);
+    if(o.all?m.pit.has(k):s.knownPit.has(k))drawPit(ctr(x),ctr(y),o.oasis?'#ff8a3d':(k===Core.key(m.hole.x,m.hole.y)?'#ff8a3d':'#6fd6c8'));
+    if(o.oasis&&m.pit.has(k)){const q=g.createRadialGradient(ctr(x),ctr(y),2,ctr(x),ctr(y),34);q.addColorStop(0,'#ffd65c');q.addColorStop(.6,'rgba(255,120,60,.8)');q.addColorStop(1,'rgba(255,120,60,0)');g.fillStyle=q;g.beginPath();g.arc(ctr(x),ctr(y),34,0,7);g.fill()}
+    if(!o.all&&s.reads.has(k)&&!s.knownPit.has(k)){const n=s.reads.get(k);g.font='700 38px "JetBrains Mono",monospace';g.textAlign='center';g.textBaseline='middle';g.fillStyle='rgba(0,0,0,.55)';g.fillRect(ctr(x)-23,ctr(y)-25,46,50);g.fillStyle=n===0?'#a6a7b4':n>=3?'#ff8a3d':'#fff';g.fillText(n,ctr(x),ctr(y)+2);g.textBaseline='alphabetic'}
+    else if(!o.all&&s.safe.has(k)&&!s.reads.has(k)){g.strokeStyle='#6fd6c8';g.lineWidth=4;g.beginPath();g.moveTo(ctr(x)-11,ctr(y));g.lineTo(ctr(x)-3,ctr(y)+9);g.lineTo(ctr(x)+13,ctr(y)-11);g.stroke()}
+    if(!o.all&&s.flags.has(k)){g.fillStyle='#ff5d5d';g.beginPath();g.moveTo(ctr(x)-10,ctr(y)+20);g.lineTo(ctr(x)-10,ctr(y)-22);g.lineTo(ctr(x)+18,ctr(y)-10);g.lineTo(ctr(x)-6,ctr(y)-2);g.lineTo(ctr(x)-6,ctr(y)+20);g.fill()}}
+  const t=m.target;g.strokeStyle='#ff8a3d';g.lineWidth=4;const a=ctr(t.x),b=ctr(t.y),z=38+(calm?0:Math.sin(T*3)*3);for(const [sx,sy] of [[-1,-1],[1,-1],[1,1],[-1,1]]){g.beginPath();g.moveTo(a+sx*z,b+sy*(z-16));g.lineTo(a+sx*z,b+sy*z);g.lineTo(a+sx*(z-16),b+sy*z);g.stroke()}}
+function runM2(map,keep){return new Promise(done=>{
+  const s=keep||Core.newRun(map),bg=groundFor(map.seed%997);let mode='move',hover=null,fx=null,hints=0;
+  swarm.x=ctr(Core.swarmAt(s).x);swarm.y=ctr(Core.swarmAt(s).y);swarm.blow=0;
+  const scanR=Core.LEVELS[map.level].scanR;
+  const tool=(id,icon,t,sub)=>`<button class="tool" id="${id}" type="button">${icon}<span>${t}<small id="${id}S">${sub}</small></span></button>`;
+  const dish=`<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#17352f"/><path d="M12 42c14 0 30-14 30-30" fill="none" stroke="#6fd6c8" stroke-width="5"/><path d="M12 30c8 0 18-10 18-18" fill="none" stroke="#6fd6c8" stroke-width="4"/><circle cx="14" cy="50" r="5" fill="#6fd6c8"/></svg>`;
+  const flag=`<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" fill="#3a2024"/><path d="M22 54V12l26 11-22 9v22z" fill="#ff5d5d"/></svg>`;
+  side(`<div class="panel"><h3>Ровер-2</h3><div class="row"><span>Заряд</span><span id="chg"></span></div><div class="meter" id="chgM"><i id="chgB"></i></div><div class="row"><span>Шаг</span><span id="trn"></span></div></div>
+  <div class="panel">${tool('tScan',dish,'Снимок радара','')}${tool('tAsk',P.vanya.a,'Спросить Аврору','')}${tool('tFore',P.grisha.a,'Прогноз роя','')}${tool('tFlag',flag,'Поставить метку','Отметь, где подозреваешь полость')}</div>
+  <div class="panel"><p class="kbd">Число в клетке: сколько полостей вокруг неё, включая диагонали. Ходи стрелками, WASD или нажимай соседнюю клетку. Рой отнимает заряд и мешает пробе.</p></div>`);
+  function ui(){$('#chg').textContent=s.charge+' / '+s.maxCharge;$('#chgB').style.width=100*s.charge/s.maxCharge+'%';$('#chgM').className='meter'+(s.charge<6?' low':'');$('#trn').textContent=s.turn;
+    const wait=s.nextPass-s.turn;$('#tScanS').textContent=wait>0?`«Зоркий» вернётся, ходов: ${wait}`:`«Зоркий» на месте: участок ${scanR*2+1}×${scanR*2+1}`;$('#tScan').disabled=wait>0;
+    $('#tAskS').textContent=`Ваня: проверить клетку, осталось ${s.askLeft}`;$('#tAsk').disabled=s.askLeft<=0;
+    $('#tForeS').textContent=s.forecastUntil>=s.turn?`Путь роя виден до хода ${s.forecastUntil}`:`Гриша: 4 хода вперёд, осталось ${s.forecastLeft}`;$('#tFore').disabled=s.forecastLeft<=0;
+    for(const [id,mm] of [['tScan','scan'],['tAsk','ask'],['tFlag','flag']])$('#'+id).classList.toggle('on',mode===mm);hud('ТЕПЛОВАЯ КАМЕРА · РОВЕР-2 · НОЧЬ, ТАЙГА')}
+  const setMode=mm=>{mode=mode===mm?'move':mm;ui();if(mode==='scan')show('aurora','Выбери участок на карте. «Зоркий» покажет скрытые полости.');if(mode==='ask')show('aurora','Выбери клетку, и я проверю её по данным.');if(mode==='flag')show('text','Нажми клетку, чтобы поставить или снять метку.')};
+  $('#tScan').onclick=()=>setMode('scan');$('#tAsk').onclick=()=>setMode('ask');$('#tFlag').onclick=()=>setMode('flag');
+  $('#tFore').onclick=()=>{if(s.forecastLeft<=0)return;s.forecastLeft--;s.forecastUntil=s.turn+4;hints++;beep(500,.1,'sine');show('grisha','Гнус держится плотной кучей и движется волнами. Вот куда рой пойдёт дальше: смотри на белые точки.');ui()};
+  function finish(ev){
+    if(ev==='fell'){shake=1;fx={k:'static',t:1.2};beep(90,.5,'sawtooth',.06);show('vanya','Ровер провалился! Пустота под тонкой коркой, как у первого.');setTimeout(retry,1300)}
+    if(ev==='empty'){beep(120,.4);show('aurora','Заряд закончился. Ровер-2 остановился.');setTimeout(retry,900)}
+    if(ev==='won'){beep(880,.25,'sine');scene=null;done({s,hints,bg})}}
+  function retry(){card('Симуляция Авроры','Попробуем ещё раз',`Аврора просчитала, что было бы дальше, и откатила маршрут. Всё, что вы уже узнали о местности, осталось на карте.`,'Снова в путь').then(()=>{Core.restart(s);mode='move';ui();show('aurora','Ровер снова на старте. Карта и пробы сохранены.')})}
+  function go(dx,dy){if(s.status!=='play'||!$('#card').hidden)return;const r=Core.step(s,dx,dy);if(!r.ok)return;mode='move';beep(330,.04);
+    if(r.ev==='swarm'){shake=.4;show('grisha','Мы в рое! Камеру облепило: минус 2 заряда, проба не считана.')}ui();finish(r.ev)}
+  window.__keys=e=>{const d={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],'ц':[0,-1],'ы':[0,1],'ф':[-1,0],'в':[1,0]}[e.key];if(d){e.preventDefault();go(...d)}};
+  scene={s,
+    draw(dt){drawMap(s,{bg});
+      if(hover&&s.status==='play'){const [x,y]=hover;if(mode==='move'){if(Math.abs(x-s.x)+Math.abs(y-s.y)===1){g.strokeStyle='#ff8a3d';g.lineWidth=3;g.strokeRect(x*CS+4,y*CS+4,CS-8,CS-8)}}else{const R=mode==='scan'?scanR:0;g.fillStyle=mode==='scan'?'rgba(111,214,200,.22)':'rgba(255,138,61,.25)';g.fillRect((x-R)*CS,(y-R)*CS,(2*R+1)*CS,(2*R+1)*CS)}}
+      if(s.forecastUntil>=s.turn){g.fillStyle='#fff';for(let t=s.turn+1;t<=s.forecastUntil;t++){const c=Core.swarmAt(s,t);g.globalAlpha=.8;g.beginPath();g.arc(ctr(c.x)+(t%2)*10,ctr(c.y)+(t%3)*7,7,0,7);g.fill()}g.globalAlpha=1}
+      const c=Core.swarmAt(s);drawSwarm(ctr(c.x),ctr(c.y));drawRover(ctr(s.x),ctr(s.y));
+      if(fx&&fx.k==='scan'){fx.t+=dt*1.6;const a=Math.max(0,1-fx.t);g.strokeStyle=`rgba(111,214,200,${a})`;g.lineWidth=6;g.beginPath();g.arc(ctr(fx.x),ctr(fx.y),fx.t*(scanR+1.3)*CS,0,7);g.stroke();if(fx.t>=1)fx=null}
+      if(fx&&fx.k==='static'){fx.t-=dt;for(let i=0;i<500;i++){g.fillStyle=Math.random()<.5?'#000':'#ddd';g.fillRect(Math.random()*VW,Math.random()*VH,14,3+Math.random()*5)}if(fx.t<=0)fx=null}},
+    move(x,y){hover=[Math.floor(x/CS),Math.floor(y/CS)];cv.style.cursor='pointer'},
+    click(x,y){const cx=Math.floor(x/CS),cy=Math.floor(y/CS);if(s.status!=='play'||!Core.key)return;
+      if(mode==='scan'){if(Core.scan(s,cx,cy)){beep(1100,.25,'sine',.03);fx={k:'scan',t:0,x:cx,y:cy};mode='move';show('aurora','Снимок готов. Бирюзовая галочка: грунт надёжный. Круг: полость.');ui()}return}
+      if(mode==='ask'){const bad=Core.ask(s,cx,cy);hints++;mode='move';show('aurora',bad?'Под этой клеткой полость. Обходи её.':'Здесь грунт держит. Можно ехать.');ui();return}
+      if(mode==='flag'){const k=Core.key(cx,cy);s.flags.has(k)?s.flags.delete(k):s.flags.add(k);return}
+      if(Math.abs(cx-s.x)+Math.abs(cy-s.y)===1)go(cx-s.x,cy-s.y)}
+  };ui()})}
+
+/* Миссия 3 */
+function nearestPit(m){let b=null,bd=1e9;for(const k of m.pit){const [x,y]=k.split(',').map(Number),d=Math.hypot(x-m.human.x,y-m.human.y);if(d<bd){bd=d;b={x,y}}}return b}
+async function runM3(res){
+  const s=res.s,m=s.m,bg=res.bg;let warn=null,hover=null,pickOn=false,oasis=false,heli=null,wrong=0;
+  swarm.blow=0;hud('ТЕПЛОВАЯ КАМЕРА · РАДАР «ЗОРКИЙ» · ВЕСЬ УЧАСТОК');
+  side(`<div class="panel"><h3>Что на экране</h3><p>Белая фигура: человек. Белое облако: рой над ямой Ровера-1. Чёрные круги: полости на карте радара.</p></div><div class="panel"><h3>Спасатели</h3><div class="row"><span>Статус</span><span id="res">ждут данные</span></div></div>`);
+  scene={draw(dt){drawMap(s,{bg,all:true,oasis});
+    if(hover&&pickOn){const [x,y]=hover,ok=Core.landing(m,x,y)==='ok';g.strokeStyle=ok?'#6fd6c8':'#ff5d5d';g.lineWidth=4;g.strokeRect((x-1)*CS+3,(y-1)*CS+3,3*CS-6,3*CS-6)}
+    if(warn){g.strokeStyle='#ff5d5d';g.lineWidth=4;g.setLineDash([12,10]);g.beginPath();g.moveTo(ctr(m.human.x),ctr(m.human.y));g.lineTo(ctr(warn.x),ctr(warn.y));g.stroke();g.setLineDash([])}
+    if(!heli||heli.p<1.2)drawHuman(ctr(m.human.x),ctr(m.human.y)+6);
+    drawRover(ctr(m.target.x),ctr(m.target.y),true);
+    if(swarm.blow<1)drawSwarm(ctr(m.hole.x),ctr(m.hole.y),130);
+    if(heli){heli.p+=dt/3.2;const p=Math.min(1,heli.p),x=VW+120+(heli.x-VW-120)*p,y=-120+(heli.y+120)*p;if(p>.7)swarm.blow=Math.min(1,swarm.blow+dt*.6);
+      g.save();g.translate(x,y);g.fillStyle='#fff';g.shadowColor='#fff';g.shadowBlur=20;g.beginPath();g.ellipse(0,0,14,34,.5,0,7);g.fill();g.rotate(T*22);g.fillStyle='rgba(255,255,255,.75)';g.fillRect(-82,-3,164,6);g.fillRect(-3,-82,6,164);g.restore()}},
+    move(x,y){hover=[Math.floor(x/CS),Math.floor(y/CS)]},click(x,y){if(pickOn&&this.onPick)this.onPick(Math.floor(x/CS),Math.floor(y/CS))}};
+  await say([['text','Ровер-2 дошёл до точки. На экране круглая чёрная яма, над ней плавает огромное белое облако, а дальше стоит человек.'],
+    ['grisha','Это не привидение. Смотри, облако из мелких частиц! Это гнус. Рой сидел в полости, а ровер его выпустил.'],
+    ['vanya','Аврора, тут есть другие ямы?'],
+    ['aurora','Радар «Зоркого» работает и ночью, и сквозь верхний слой почвы. Вывожу карту всего участка. Полостей много.'],
+    ['grisha','Он стоит среди них и ничего не видит. Нам-то всё видно на тепловой камере, а там темнота.']]);
+  for(;;){const c=await choose('Что сделаете, пока мама Вани едет сюда?','vanya',['Включить прожектор ровера и подать сигнал','Написать манипулятором на земле «Осторожно»','Ничего не показывать и следить за человеком']);
+    if(c===2)break;wrong++;warn=nearestPit(m);beep(180,.2);
+    await say([['aurora',c===0?'Моделирую: человек видит свет и идёт к роверу. Красная линия: его путь проходит через полость и рядом с роем.':'Моделирую: в темноте надпись не видна. Чтобы её разобрать, человек подойдёт ближе, а красная линия ведёт к полости.'],['grisha','Нет, так он пострадает, и это будет на нашей совести.']]);warn=null}
+  await say([['grisha','Лучше не привлекать его к роверу. Стоит на месте, значит, пока в безопасности.'],['text','Дверь открывается. В лабораторию входят студенты, а с ними Наталья Николаевна.'],
+    ['natalya','Что у вас тут происходит? Вижу. Звоню в МЧС. Им нужна ваша карта и место для вертолёта.'],
+    ['aurora','Выберите центр площадки 3×3. В ней не должно быть полостей. От неё до человека должно быть от 2 до 4 клеток, а до роя минимум 3.']]);
+  show('natalya','Покажи на карте, где садиться.');
+  await new Promise(ok=>{pickOn=true;scene.onPick=(x,y)=>{const r=Core.landing(m,x,y);if(r==='ok'){pickOn=false;heli={x:ctr(x),y:ctr(y),p:0};ok();return}wrong++;beep(200,.1);
+    show('aurora',{edge:'Площадка 3×3 должна целиком поместиться на карте.',pit:'На площадке есть полость. Вертолёт нельзя сажать на тонкую корку.',far:'Слишком далеко от человека. Нужно не дальше 4 клеток.',near:'Слишком близко к человеку: поток от винта может его сбить.',swarm:'Слишком близко к рою. Отступи от ямы минимум на 3 клетки.'}[r])}});
+  $('#res').textContent='вылетели';beep(240,.6,'sawtooth',.03);show('text','Вертолёт идёт низко над тайгой. Поток воздуха от винта разгоняет рой.');
+  await new Promise(ok=>setTimeout(ok,calm?1200:3800));$('#res').textContent='человек спасён';oasis=true;beep(880,.3,'sine');
+  await say([['natalya','Спасатели нашли его. Этого района на картах таяния давно не обновляли, ваши данные пришлись очень кстати.'],
+    ['aurora','Обнаружены следы множества форм жизни. Под мёртвым слоем почвы прячутся оазисы: растения и насекомые приспособились к токсинам.'],
+    ['vanya','Значит, у леса есть надежда! И это Гриша догадался и про гнус, и про то, что знак подавать нельзя.'],
+    ['text','Вечером вы едете домой. За окнами электромобиля огни Москвы, а Гриша молчит.'],
+    ['grisha','Какой смысл поступать, если в космос меня не возьмут? Я же про насекомых, а не про инженерию.'],
+    ['natalya','Космос просто место. Важно, что ты там делаешь с пользой для людей. По снимкам со спутников энтомолог сможет следить за саранчой, а на Лунной базе изучать дрозофил.'],
+    ['vanya','И кто ещё полетит со мной к марсианским муравьям?']]);
+  return wrong}
+
+/* Сценарий */
+async function play(level){
+  $('#hero').hidden=true;stage(1);
+  const seed=Math.floor(Math.random()*1e6),map=Core.genMap(seed,level);
+  scene=titleScene();hud('');
+  side(`<div class="panel"><h3>Смена в лаборатории</h3><p>Роверы едут по тайге на северо-востоке России. Связь идёт через спутники JuniX, данные проверяет ИИ Аврора.</p></div>`);
+  await say([['diana','Смотрите: два ровера ищут жизнь в «мёртвой зоне». Лес выгорел три года назад, когда прорвало нефтепровод, а до ближайших людей больше 100 километров.'],
+    ['anton','Уже пять проб, и всё пусто. Нас срочно зовут к Сан Санычу из-за отчёта. Пожалуйста, ничего не нажимайте!'],
+    ['sasha','Ребята, присмотрите за роверами пять минут. Они сами знают, что делать.'],
+    ['text','Шаги стихают. Солнце за окном становится оранжевым. Ровер-1 заносит манипулятор, и вдруг картинка рассыпается в серый шум.'],
+    ['vanya','Ты видел? За деревьями стоял человек!'],
+    ['grisha','Там же никого не может быть… Вань, звони маме!'],
+    ['vanya','«Абонент недоступен». Аврора, отправь второй ровер по следу первого!'],
+    ['aurora','Для ручной команды нужен отдельный канал. Соберите цепочку из спутников JuniX от Ровера-2 до Москвы.']]);
+  show('aurora','Нажимай спутники по очереди от ровера к Москве.');
+  const r1=await runM1();
+  await card('Как это устроено на самом деле','Почему спутников нужно так много','Спутник на низкой орбите летит со скоростью около 7,5 км/с и делает виток примерно за полтора часа. Над одной точкой он виден всего несколько минут, поэтому связь держит целая группировка, которая передаёт данные от спутника к спутнику. В игре время сильно замедлено.');
+  await say([['aurora','Канал открыт. Ровер-2 слушает.'],['grisha','Подожди! Здесь тает вечная мерзлота. Под тонкой коркой могут быть круглые провалы. Наверное, в такой и упал первый ровер.'],['vanya','Значит, поведём сами. Я проверяю маршрут с Авророй, ты следи за всем живым.'],
+    ['aurora','Каждая проба грунта покажет, сколько полостей вокруг. Когда над районом «Зоркий», можно заказать снимок радара.']]);
+  show('aurora','Цель: оранжевая рамка у ямы Ровера-1. Первый снимок радара уже можно сделать.');
+  const r2=await runM2(map);stage(3);
+  await card('Как это устроено на самом деле','Почему в тайге появляются провалы','Вечная мерзлота держится на льду. Когда лёд тает, грунт проседает и возникают провалы: это называют термокарстом. Самый известный пример в России — Батагайский кратер в Якутии. Спутниковый радиолокатор сам освещает поверхность радиоволнами, поэтому снимает ночью и сквозь облака.');
+  const wrong=await runM3(r2);
+  await card('Как это устроено на самом деле','Как камера увидела рой в темноте','Тепловая камера ловит инфракрасное излучение, поэтому свет ей не нужен. В рассказе рой гнуса такой плотный, что на камере он становится светящимся пятном. Настоящие тепловизоры помогают спасателям искать людей ночью.');
+  const score=Math.max(10,100-r2.s.falls*15-(r1.hints+r2.hints)*5-wrong*5-r1.breaks*2-r2.s.hits*3);
+  const rank=score>=85?'Лучший дежурный лаборатории':score>=55?'Надёжный оператор':'Стажёр с характером';
+  stage(4);
+  const c=$('#card');c.hidden=false;c.innerHTML=`<div class="card"><div class="kicker">Журнал смены</div><h2>${rank}: ${score} из 100</h2>
+    <div class="row"><span>Обрывов связи</span><span>${r1.breaks}</span></div><div class="row"><span>Падений ровера</span><span>${r2.s.falls}</span></div><div class="row"><span>Снимков радара</span><span>${r2.s.scans}</span></div><div class="row"><span>Подсказок</span><span>${r1.hints+r2.hints}</span></div><div class="row"><span>Неверных решений</span><span>${wrong}</span></div>
+    <p>Человек спасён, а у «мёртвой зоны» появилась надежда. Прочитай рассказ целиком: edu.sputnix.ru/docs/cosmix/the_cloud_is_attacking</p><div class="levels"><button class="btn" id="again" type="button">Новая смена</button></div></div>`;
+  $('#again').onclick=()=>{c.hidden=true;$('#hero').hidden=false;talk.innerHTML='';side('');stage(0);scene=titleScene();hud('')}}
+
+/* Ввод */
+function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*VW/r.width,(e.clientY-r.top)*VH/r.height]}
+cv.addEventListener('pointerdown',e=>{if(scene&&scene.click)scene.click(...pt(e))});
+cv.addEventListener('pointermove',e=>{if(scene&&scene.move)scene.move(...pt(e))});
+addEventListener('keydown',e=>{if(window.__keys&&scene&&!e.repeat)window.__keys(e);
+  if((e.key==='Enter'||e.key===' ')&&advance&&$('#card').hidden&&document.activeElement.tagName!=='BUTTON'){e.preventDefault();beep(520,.04);advance()}});
+document.querySelectorAll('[data-level]').forEach(b=>b.onclick=()=>{beep(440,.06);play(+b.dataset.level)});
+
+function loop(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;T+=dt;g.save();
+  if(shake>0&&!calm){g.translate((Math.random()-.5)*26*shake,(Math.random()-.5)*26*shake);shake=Math.max(0,shake-dt*1.6)}
+  g.clearRect(-30,-30,VW+60,VH+60);if(scene){if(scene.update)scene.update(dt);if(scene&&scene.draw)scene.draw(dt)}g.restore();grain();requestAnimationFrame(loop)}
+scene=titleScene();requestAnimationFrame(loop);
+window.__game={Core,get scene(){return scene},play,runM1,runM2,runM3,stage,say};
+</script>
+
+</body>
+</html>
